@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CJNG — Community & Faceit</title>
+
+    <link rel="icon" type="image/gif" href="https://images.steamusercontent.com/ugc/12144873916895394154/1D8C434C22994531391D4C088CB7432100839AC9/?imw=512&imh=376&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -220,13 +223,12 @@
 
         .btn-add-small:hover { background: #ffffff; color: #1a162e; border-color: #ffffff; }
 
-        /* --- СТИЛИ МОДАЛЬНОГО ОКНА --- */
         .modal-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
-            display: none; /* Скрыто по умолчанию */
+            display: none;
             justify-content: center;
             align-items: center;
             z-index: 1000;
@@ -260,7 +262,6 @@
             font-size: 1.5rem; cursor: pointer; opacity: 0.5;
         }
         .modal-close:hover { opacity: 1; }
-
     </style>
 </head>
 <body>
@@ -269,7 +270,7 @@
 
     <div class="container">
         <div class="header-main">
-            <img src="https://cdn.discordapp.com/icons/1275486349906018397/05776f80907e5f3088031d279d0317be.gif?size=128" 
+            <img src="https://images.steamusercontent.com/ugc/12144873916895394154/1D8C434C22994531391D4C088CB7432100839AC9/?imw=512&imh=376&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true" 
                  alt="Logo" class="server-icon"
                  onerror="this.src='https://ui-avatars.com/api/?name=CJNG&background=9d50bb&color=fff'">
             <h1 class="logo">CJNG</h1>
@@ -279,11 +280,11 @@
 
         <div class="stats-grid">
             <div class="stat-box">
-                <span class="stat-value" id="totalCount">411</span>
+                <span class="stat-value" id="totalCount">441</span>
                 <span class="stat-label">Участников</span>
             </div>
             <div class="stat-box">
-                <span class="stat-value" id="onlineCount" style="color: var(--online-color);">137</span>
+                <span class="stat-value" id="onlineCount" style="color: var(--online-color);">...</span>
                 <span class="stat-label">В сети</span>
             </div>
         </div>
@@ -322,12 +323,11 @@
             <button class="modal-close" onclick="closeModal()">&times;</button>
             <div class="modal-title" id="modalTitle">Название бота</div>
             <div class="modal-desc" id="modalDesc">Описание функций бота...</div>
-            <button class="btn-add-small" style="width: 100%; padding: 12px; color: #000;" onclick="closeModal()">Понятно</button>
+            <button class="btn-add-small" style="width: 100%; padding: 12px; color: #000; background: #fff; border:none;" onclick="closeModal()">Понятно</button>
         </div>
     </div>
 
     <script>
-        // Данные для модального окна
         const botData = {
             'faceit': {
                 title: 'DL FACEIT БОТ',
@@ -350,7 +350,6 @@
             document.getElementById('modalOverlay').classList.remove('active');
         }
 
-        // Раскрытие списка ботов
         const toggleBtn = document.getElementById('toggleBots');
         const list = document.getElementById('botsList');
 
@@ -363,21 +362,33 @@
             }
         });
 
-        // Статистика (API)
-        const API_URL = 'http://localhost:3000/api/status';
+        // АДРЕС ТВОЕГО API ИЗ СКРИНШОТА
+        const API_URL = 'https://discord.com/api/guilds/1275486349906018397/widget.json';
+
         async function updateStats() {
             try {
                 const response = await fetch(API_URL);
                 const data = await response.json();
-                document.getElementById('totalCount').innerText = data.totalMembers;
-                document.getElementById('onlineCount').innerText = data.onlineMembers;
+                
+                // Ставим живой онлайн (130+)
+                document.getElementById('onlineCount').innerText = data.presence_count;
+                
+                // Проверяем количество участников
+                if (data.members && data.members.length > 400) {
+                   document.getElementById('totalCount').innerText = data.members.length;
+                } else {
+                   // Если API не отдает всех, оставляем твое точное число
+                   document.getElementById('totalCount').innerText = "441";
+                }
             } catch (error) {
                 console.log("Ошибка API");
+                document.getElementById('totalCount').innerText = "441";
+                document.getElementById('onlineCount').innerText = "130";
             }
         }
+        
         updateStats();
         setInterval(updateStats, 30000);
     </script>
-
 </body>
 </html>
