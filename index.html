@@ -622,32 +622,37 @@
             requestAnimationFrame(updateNumber);
         }
 
-        // АДРЕС ТВОЕГО API
-        const API_URL = 'https://discord.com/api/guilds/1275486349906018397/widget.json';
+        // АДРЕСА API DISCORD
+        const WIDGET_URL = 'https://discord.com/api/guilds/1275486349906018397/widget.json';
+        const INVITE_URL = 'https://discord.com/api/v9/invites/mQtgtbtQY6?with_counts=true';
 
         async function updateStats() {
+            // 1. Извлекаем 100% точные счетчики участников и онлайна через публичный инвайт (Безопасно)
             try {
-                const response = await fetch(API_URL);
-                const data = await response.json();
+                const inviteResponse = await fetch(INVITE_URL);
+                const inviteData = await inviteResponse.json();
                 
-                // Плавно крутим живой онлайн
-                animateCounter('onlineCount', data.presence_count);
-                document.getElementById('sidebarOnlineTitle').innerText = `В сети: ${data.presence_count}`;
-                
-                // Проверяем количество участников
-                if (data.members && data.members.length > 400) {
-                    animateCounter('totalCount', data.members.length);
-                } else {
-                    animateCounter('totalCount', 441);
+                if (inviteData.approximate_member_count) {
+                    animateCounter('totalCount', inviteData.approximate_member_count);
                 }
+                if (inviteData.approximate_presence_count) {
+                    animateCounter('onlineCount', inviteData.approximate_presence_count);
+                    document.getElementById('sidebarOnlineTitle').innerText = `В сети: ${inviteData.approximate_presence_count}`;
+                }
+            } catch (e) {
+                console.log("Ошибка загрузки счетчиков инвайта", e);
+            }
 
-                // Рендерим список участников в сайдбар
+            // 2. Строим список реальных участников в сайдбар через стандартный виджет
+            try {
+                const response = await fetch(WIDGET_URL);
+                const data = await response.json();
+
                 const container = document.getElementById('memberList');
-                container.innerHTML = ''; // Очищаем старый список
+                container.innerHTML = ''; 
 
                 if (data.members && data.members.length > 0) {
                     data.members.forEach(member => {
-                        // Кастомный статус текстом, если он есть
                         let gameStatus = member.game ? member.game.name : 'В сети';
                         
                         const item = document.createElement('div');
@@ -669,14 +674,12 @@
                 }
 
             } catch (error) {
-                console.log("Ошибка API");
-                animateCounter('totalCount', 441);
-                animateCounter('onlineCount', 130);
+                console.log("Ошибка API виджета", error);
             }
         }
         
         updateStats();
-        setInterval(updateStats, 30000);
+        setInterval(updateStats, 30000); // Автообновление каждые 30 секунд
     </script>
 </body>
 </html>
