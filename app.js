@@ -6,44 +6,64 @@ const cors = require('cors');
 const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
-        GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildPresences
+        GatewayIntentBits.GuildMembers,   // Важно: Кэширует юзеров
+        GatewayIntentBits.GuildPresences  // Важно: Видит их онлайн-статусы
     ]
 });
 
 const app = express();
-app.use(cors());
+app.use(cors()); 
 
-// --- НАСТРОЙКИ (ЗАМЕНИ НА СВОИ) ---
+// --- НАСТРОЙКИ ---
 const SERVER_ID = '1275486349906018397'; 
-// ----------------------------------
+const DISCORD_TOKEN = process.env.DISCORD_TOKEN; 
+// ------------------
 
-// 2. API Эндпоинт для сайта
-app.get('/api/status', (req, res) => {
-    const guild = client.guilds.cache.get(SERVER_ID);
-    
-    if (!guild) {
-        return res.status(404).json({ error: "Сервер не найден" });
+// 2. API Эндпоинт для сайта (делаем асинхронным через async/await)
+app.get('/api/status', async (req, res) => {
+    try {
+        // Получаем сервер из кэша или запрашиваем у Discord напрямую
+        let guild = client.guilds.cache.get(SERVER_ID);
+        if (!guild) {
+            guild = await client.guilds.fetch(SERVER_ID);
+        }
+        
+        if (!guild) {
+            return res.status(404).json({ error: "Сервер Discord не найден или бот не добавлен на него." });
+        }
+
+        // КРИТИЧЕСКИ ВАЖНО: Принудительно выкачиваем актуальный список участников со статусами онлайн
+        // Без этого guild.members.cache будет пустой или неполный!
+        const members = await guild.members.fetch({ withPresences: true });
+
+        // Считаем онлайн (все, кроме тех, у кого статус 'offline' или отсутствует presence)
+        const onlineCount = members.filter(m => m.presence && m.presence.status !== 'offline').size;
+
+        res.json({
+            serverName: guild.name,
+            totalMembers: guild.memberCount, // Отдает 100% точное общее число участников сервера
+            onlineMembers: onlineCount,     // Точное число людей в сети
+            botStatus: "online"
+        });
+        
+    } catch (error) {
+        console.error("Ошибка при обработке запроса API:", error);
+        res.status(500).json({ error: "Внутренняя ошибка сервера API" });
     }
-
-    // Считаем онлайн (те, кто не offline)
-    const onlineCount = guild.members.cache.filter(m => m.presence?.status && m.presence.status !== 'offline').size;
-
-    res.json({
-        serverName: guild.name,
-        totalMembers: guild.memberCount,
-        onlineMembers: onlineCount,
-        botStatus: "online" // Если API ответило, значит процесс бота запущен
-    });
 });
 
-// 3. Лог запуска
+// 3. Лог успешного запуска бота в Discord
 client.once('ready', () => {
-    console.log(`✅ Бот ${client.user.tag} готов!`);
-    console.log(`🔗 API доступно: http://localhost:3000/api/status`);
+    console.log(`✅ Бот ${client.user.tag} успешно запущен и авторизован!`);
 });
 
-// 4. Логин
-client.login(BOT_TOKEN).catch(err => console.error("❌ Ошибка токена:", err.message));
+// 4. Логин бота
+if (!DISCORD_TOKEN) {
+    console.error("❌ КРИТИЧЕСКАЯ ОШИБКА: Переменная среды DISCORD_TOKEN не задана!");
+} else {
+    client.login(DISCORD_TOKEN).catch(err => console.error("❌ Ошибка авторизации токена:", err.message));
+}
 
-app.listen(3000, () => console.log('🚀 Веб-сервер запущен на порту 3000'));
+// 5. Запуск веб-сервера Express
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => console.log(`🚀 Веб-сервер API успешно запущен на порту ${PORT}`));
