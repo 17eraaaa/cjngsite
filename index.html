@@ -9,16 +9,18 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;900&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg-color: #050510;
             --card-bg: rgba(26, 22, 46, 0.75);
             --accent: #9d50bb;
+            --accent-glow: rgba(157, 80, 187, 0.4);
             --accent-2: #6e48aa;
             --text-main: #ffffff;
             --text-dim: #8e9297;
             --online-color: #43b581;
+            --sidebar-bg: rgba(15, 12, 28, 0.95);
         }
 
         * { box-sizing: border-box; }
@@ -34,8 +36,10 @@
             font-family: 'Inter', sans-serif;
             color: var(--text-main);
             overflow-x: hidden;
+            position: relative;
         }
 
+        /* Интерактивный фон */
         .bg-glow {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
@@ -46,11 +50,189 @@
             animation: glowAnimation 12s infinite alternate ease-in-out;
         }
 
+        .bg-circle {
+            position: fixed;
+            border-radius: 50%;
+            background: linear-gradient(45deg, var(--accent), var(--accent-2));
+            mix-blend-mode: screen;
+            filter: blur(70px);
+            opacity: 0.18;
+            z-index: -1;
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+        .circle-1 { width: 380px; height: 380px; top: -80px; left: -80px; }
+        .circle-2 { width: 320px; height: 320px; bottom: -80px; right: -80px; }
+
         @keyframes glowAnimation {
             0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1.15); opacity: 1; }
         }
 
+        /* Кнопка открытия меню (слева) */
+        .menu-trigger {
+            position: fixed;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            width: 50px;
+            height: 50px;
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+            z-index: 99;
+            transition: 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .menu-trigger:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 15px var(--accent-glow);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .menu-trigger span {
+            width: 22px;
+            height: 2px;
+            background: #fff;
+            border-radius: 2px;
+            transition: 0.3s;
+        }
+
+        /* Стили при открытом меню для кнопки */
+        .menu-trigger.active {
+            left: 340px;
+        }
+        .menu-trigger.active span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .menu-trigger.active span:nth-child(2) { opacity: 0; }
+        .menu-trigger.active span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        /* Сайдбар (Боковое меню) */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: -320px;
+            width: 320px;
+            height: 100vh;
+            background: var(--sidebar-bg);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            z-index: 98;
+            transition: 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            padding: 40px 25px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 20px 0 50px rgba(0,0,0,0.5);
+        }
+
+        .sidebar.open {
+            left: 0;
+        }
+
+        .sidebar-title {
+            font-size: 1.4rem;
+            font-weight: 900;
+            margin-bottom: 5px;
+            background: linear-gradient(to right, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-subtitle {
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }
+
+        /* Список участников */
+        .member-list {
+            flex-content: start;
+            overflow-y: auto;
+            flex-grow: 1;
+            padding-right: 5px;
+        }
+
+        /* Кастомизация скроллбара */
+        .member-list::-webkit-scrollbar { width: 4px; }
+        .member-list::-webkit-scrollbar-track { background: rgba(255,255,255,0.01); }
+        .member-list::-webkit-scrollbar-thumb { background: rgba(157, 80, 187, 0.3); border-radius: 4px; }
+
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            margin-bottom: 8px;
+            transition: 0.2s;
+        }
+
+        .member-item:hover {
+            background: rgba(157, 80, 187, 0.08);
+            border-color: rgba(157, 80, 187, 0.2);
+        }
+
+        .member-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.1);
+            object-fit: cover;
+        }
+
+        .member-info {
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .member-name {
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .member-status {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .member-status.online { color: var(--online-color); }
+        .member-status-dot { width: 5px; height: 5px; background: currentColor; border-radius: 50%; }
+
+        /* Затемнение основного контента при открытии меню */
+        .overlay-shade {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            z-index: 97;
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+        }
+        .sidebar.open ~ .overlay-shade {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Главный контейнер карточки */
         .container {
             background: var(--card-bg);
             backdrop-filter: blur(20px);
@@ -64,11 +246,6 @@
             box-shadow: 0 30px 60px rgba(0,0,0,0.6);
             position: relative;
             animation: containerIn 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        @keyframes containerIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
         }
 
         .header-main {
@@ -130,7 +307,22 @@
         }
 
         .stat-value { font-size: 1.8rem; font-weight: 700; display: block; }
-        .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; }
+        .stat-label { font-size: 0.7rem; color: var(--text-dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 6px; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+        .live-pulse {
+            width: 6px; height: 6px;
+            background-color: var(--online-color);
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px var(--online-color);
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0% { transform: scale(0.9); opacity: 0.6; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px var(--online-color); }
+            100% { transform: scale(0.9); opacity: 0.6; }
+        }
 
         .btn-main {
             display: block;
@@ -202,8 +394,12 @@
             letter-spacing: 0.5px; 
             cursor: help; 
             transition: 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
         }
         .bot-name:hover { color: var(--accent); }
+        .bot-name::after { content: 'ⓘ'; font-size: 0.75rem; opacity: 0.4; font-weight: normal; }
         
         .status { font-size: 0.75rem; display: flex; align-items: center; gap: 6px; color: var(--online-color); font-weight: 600; }
         .dot { width: 7px; height: 7px; background: var(--online-color); border-radius: 50%; box-shadow: 0 0 8px var(--online-color); }
@@ -267,6 +463,23 @@
 <body>
 
     <div class="bg-glow"></div>
+    <div class="bg-circle circle-1" id="glow1"></div>
+    <div class="bg-circle circle-2" id="glow2"></div>
+
+    <button class="menu-trigger" id="menuBtn">
+        <span></span>
+        <span></span>
+        <span></span>
+    </button>
+
+    <div class="sidebar" id="sidebar">
+        <div class="sidebar-title">Участники</div>
+        <div class="sidebar-subtitle" id="sidebarOnlineTitle">В сети: ...</div>
+        <div class="member-list" id="memberList">
+            </div>
+    </div>
+
+    <div class="overlay-shade" id="overlayShade"></div>
 
     <div class="container">
         <div class="header-main">
@@ -280,12 +493,12 @@
 
         <div class="stats-grid">
             <div class="stat-box">
-                <span class="stat-value" id="totalCount">539</span>
+                <span class="stat-value" id="totalCount">0</span>
                 <span class="stat-label">Участников</span>
             </div>
             <div class="stat-box">
-                <span class="stat-value" id="onlineCount" style="color: var(--online-color);">...</span>
-                <span class="stat-label">В сети</span>
+                <span class="stat-value" id="onlineCount" style="color: var(--online-color);">0</span>
+                <span class="stat-label"><span class="live-pulse"></span> В сети</span>
             </div>
         </div>
 
@@ -302,7 +515,7 @@
                     <span class="status"><span class="dot"></span> Online</span>
                 </div>
                 <a href="https://discord.com/oauth2/authorize?client_id=1462154423039037531&permissions=19456&integration_type=0&scope=bot" target="_blank" class="btn-add-small">
-                    Добавить на сервер
+                    Добавить на server
                 </a>
             </div>
 
@@ -362,7 +575,54 @@
             }
         });
 
-        // АДРЕС ТВОЕГО API ИЗ СКРИНШОТА
+        // Логика открытия/закрытия Сайдбара
+        const menuBtn = document.getElementById('menuBtn');
+        const sidebar = document.getElementById('sidebar');
+        const shade = document.getElementById('overlayShade');
+
+        function toggleSidebar() {
+            menuBtn.classList.toggle('active');
+            sidebar.classList.toggle('open');
+        }
+
+        menuBtn.addEventListener('click', toggleSidebar);
+        shade.addEventListener('click', toggleSidebar);
+
+        // Движение неоновых кругов за мышкой (Параллакс)
+        const glow1 = document.getElementById('glow1');
+        const glow2 = document.getElementById('glow2');
+        window.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            glow1.style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+            glow2.style.transform = `translate(${x * -30}px, ${y * -30}px)`;
+        });
+
+        // Функция красивого докручивания цифр
+        function animateCounter(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const startValue = parseInt(element.innerText) || 0;
+            if (startValue === targetValue) return;
+            
+            const duration = 1200; 
+            const startTime = performance.now();
+
+            function updateNumber(currentTime) {
+                const elapsedTime = currentTime - startTime;
+                if (elapsedTime >= duration) {
+                    element.innerText = targetValue;
+                    return;
+                }
+                const progress = elapsedTime / duration;
+                const easeProgress = progress * (2 - progress);
+                const currentValue = Math.floor(startValue + (targetValue - startValue) * easeProgress);
+                element.innerText = currentValue;
+                requestAnimationFrame(updateNumber);
+            }
+            requestAnimationFrame(updateNumber);
+        }
+
+        // АДРЕС ТВОЕГО API
         const API_URL = 'https://discord.com/api/guilds/1275486349906018397/widget.json';
 
         async function updateStats() {
@@ -370,20 +630,48 @@
                 const response = await fetch(API_URL);
                 const data = await response.json();
                 
-                // Ставим живой онлайн (130+)
-                document.getElementById('onlineCount').innerText = data.presence_count;
+                // Плавно крутим живой онлайн
+                animateCounter('onlineCount', data.presence_count);
+                document.getElementById('sidebarOnlineTitle').innerText = `В сети: ${data.presence_count}`;
                 
                 // Проверяем количество участников
                 if (data.members && data.members.length > 400) {
-                   document.getElementById('totalCount').innerText = data.members.length;
+                    animateCounter('totalCount', data.members.length);
                 } else {
-                   // Если API не отдает всех, оставляем твое точное число
-                   document.getElementById('totalCount').innerText = "441";
+                    animateCounter('totalCount', 441);
                 }
+
+                // Рендерим список участников в сайдбар
+                const container = document.getElementById('memberList');
+                container.innerHTML = ''; // Очищаем старый список
+
+                if (data.members && data.members.length > 0) {
+                    data.members.forEach(member => {
+                        // Кастомный статус текстом, если он есть
+                        let gameStatus = member.game ? member.game.name : 'В сети';
+                        
+                        const item = document.createElement('div');
+                        item.className = 'member-item';
+                        item.innerHTML = `
+                            <img class="member-avatar" src="${member.avatar_url}" alt="${member.username}" onerror="this.src='https://ui-avatars.com/api/?name=${member.username}&background=6e48aa&color=fff'">
+                            <div class="member-info">
+                                <span class="member-name">${member.username}</span>
+                                <span class="member-status online">
+                                    <span class="member-status-dot"></span>
+                                    ${gameStatus}
+                                </span>
+                            </div>
+                        `;
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.innerHTML = '<div style="color:var(--text-dim); font-size:0.85rem; text-align:center; padding-top:20px;">Включите отображение участников в настройках виджета Discord</div>';
+                }
+
             } catch (error) {
                 console.log("Ошибка API");
-                document.getElementById('totalCount').innerText = "441";
-                document.getElementById('onlineCount').innerText = "130";
+                animateCounter('totalCount', 441);
+                animateCounter('onlineCount', 130);
             }
         }
         
